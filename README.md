@@ -10,7 +10,7 @@ git clone git://github.com/drewkerrigan/riak_benchmarking.git
 git clone git://github.com/drewkerrigan/report_aggregator.git
 ```
 
-## Generate New Results CSV:
+## Generate New Results CSV
 ```
 cd report_aggregator
 python AggregateReports.py ../riak_benchmarking/results > summary.csv
