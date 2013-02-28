@@ -140,7 +140,8 @@ class ReportAggregator():
             row_dicts[name] = self.build_row_dicts(stat_file)
 
         if self._rollup_filter != None:
-            row_dicts = dict(row_dicts.items() + self.rollup(row_dicts).items())
+            rollup = self.rollup(row_dicts)
+            row_dicts = dict(row_dicts.items() + rollup.items())
 
         for name in row_dicts:
             self._rows[name] = self.process_row(row_dicts[name])
@@ -156,10 +157,11 @@ class ReportAggregator():
             
             if name not in rollup.keys():
                 rollup[name] = self._build_row_dict()
-            
+
             for field in self.file_columns():
-                for val in rows[row][field].values:
-                    rollup[name][field].add(val)
+                rollup[name][field].add_summary(rows[row][field])
+#                for val in rows[row][field].values:
+#                    rollup[name][field].add(val)
 
         return rollup
 

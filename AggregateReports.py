@@ -52,27 +52,22 @@ def mdc_filename(filename):
     else:
         return filename
     
-def bb_latency_summary(rows):
+def bb_latency_summary(rows, stat):
     s_rows = {}
-    
-    #rollup [AWS] baseline pb.eleveldb.put (1.3rc2_AAE_OFF)
-    #rollup [SLmd] baseline http.bitcask.get (1.2.1)
-    #rollup [SLmd] baseline http.bitcask.get (1.3rc4_AAE_OFF)
-    #rollup [SLmd] baseline http.bitcask.get (1.3rc4_AAE_ON)
-    
+
     for row in sorted(rows.iterkeys()):
         if (row.rfind('rollup') >= 0):
             name = row[:row.rfind(' (')]
             if name not in s_rows.keys():
                 s_rows[name] = {'121': '','13rc2': '','13rc4aoff': '','13rc4aon': ''}
             if (row.rfind(' (1.2.1') >= 0):
-                s_rows[name]['121'] = rows[row]['mean']
+                s_rows[name]['121'] = rows[row][stat]
             elif (row.rfind(' (1.3rc2') > 0):
-                s_rows[name]['13rc2'] = rows[row]['mean']
+                s_rows[name]['13rc2'] = rows[row][stat]
             elif (row.rfind(' (1.3)') > 0 or row.rfind(' (1.3rc4_AAE_OFF') > 0):
-                s_rows[name]['13rc4aoff'] = rows[row]['mean']
+                s_rows[name]['13rc4aoff'] = rows[row][stat]
             elif (row.rfind(' (1.3rc4_AAE_ON') > 0):
-                s_rows[name]['13rc4aon'] = rows[row]['mean']
+                s_rows[name]['13rc4aon'] = rows[row][stat]
     
     print "Name,1.2.1,1.3rc2,1.3rc4,1.3rc4 AAE"
     
@@ -86,7 +81,7 @@ bb_report.render()
 
 print " "
 
-bb_latency_summary(bb_report.rows())
+bb_latency_summary(bb_report.rows(), 'mean')
 
 print " "
 print "MDC"
