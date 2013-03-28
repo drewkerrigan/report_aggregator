@@ -3,10 +3,20 @@ from BashoBenchAggregator import BashoBenchAggregator
 from MdcAggregator import MdcAggregator 
 
 def bb_filename(filename):
+    AUTHmatchObj = re.match( r'(.*)\/(.*)_(.*)-auth-(.*)_(.*)\/(.*)\/(.*)\/(.*)_latencies.csv', filename, re.M|re.I)
     matchObj = re.match( r'(.*)\/(.*)_(.*)-(.*)-(.*)\/(.*)\/(.*)\/(.*)_latencies.csv', filename, re.M|re.I)
     AAEmatchObj = re.match( r'(.*)\/(.*)_(.*)-(.*)-(.*)_(.*_.*)\/(.*)\/(.*)\/(.*)_latencies.csv', filename, re.M|re.I)
     
-    if AAEmatchObj:
+    if AUTHmatchObj:
+        test_type = AUTHmatchObj.group(2)
+        protocol = AUTHmatchObj.group(3)
+        version = AUTHmatchObj.group(4)
+        backend = "bitcask"
+        test_group = AUTHmatchObj.group(5)
+        cluster = AUTHmatchObj.group(6)
+        timestamp = AUTHmatchObj.group(7)
+        operation = AUTHmatchObj.group(8)
+    elif AAEmatchObj:
         test_type = AAEmatchObj.group(2)
         protocol = AAEmatchObj.group(3)
         version = AAEmatchObj.group(4)
@@ -29,6 +39,8 @@ def bb_filename(filename):
         cluster = "AWS"
     elif (cluster == "slsmallriakservers"):
         cluster = "SLsm"
+    elif (cluster == "slnewsmallriakservers"):
+        cluster = "SLsm2"
     else:
         cluster = "SLmd"
         
@@ -60,7 +72,7 @@ def bb_latency_summary(rows, stat):
             name = row[:row.rfind(' (')]
             if name not in s_rows.keys():
                 s_rows[name] = {'121': '','13rc2': '','13rc4aoff': '','13rc4aon': ''}
-            if (row.rfind(' (1.2.1') >= 0):
+            if (row.rfind(' (1.2.1)') >= 0):
                 s_rows[name]['121'] = rows[row][stat]
             elif (row.rfind(' (1.3rc2') > 0):
                 s_rows[name]['13rc2'] = rows[row][stat]
@@ -80,8 +92,12 @@ bb_report = BashoBenchAggregator(results_base_dir + "/*/*/*/*latencies.csv", bb_
 bb_report.render()
 
 print " "
-
+print "Latency"
 bb_latency_summary(bb_report.rows(), 'mean')
+
+print " "
+print "Ops/Sec"
+bb_latency_summary(bb_report.rows(), 'mean_ops/sec')
 
 print " "
 print "MDC"
