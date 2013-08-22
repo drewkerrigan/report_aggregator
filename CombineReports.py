@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, csv, glob, re, argparse
+import os, sys, csv, glob, re, argparse
     
 def build_latencies(stats_arr, filename):
     i = 0
@@ -66,6 +66,9 @@ parser.add_argument('-o', '--output', dest='output',
 
 args = parser.parse_args()
 
+if not os.path.exists(args.output):
+    os.makedirs(args.output)
+
 latency_dict = {}
 
 for directory in args.inputs:
@@ -78,7 +81,7 @@ for directory in args.inputs:
 
 #Write Latencies
 for latency_name in latency_dict:
-    f = open(args.output + "/" + latency_name, 'w')
+    f = open(args.output + "/" + latency_name, 'w+')
     f.write("elapsed, window, n, min, mean, median, 95th, 99th, 99_9th, max, errors\n")
     for row in latency_dict[latency_name]:
         f.write(','.join(map(str,row)) + '\n')
