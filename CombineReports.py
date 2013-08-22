@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, csv, glob, re
+import sys, csv, glob, re, argparse
     
 def build_latencies(stats_arr, filename):
     i = 0
@@ -57,32 +57,40 @@ def build_summary(stats_arr, filename):
             
     return stats_arr
 
-results_base_dir = sys.argv[1]
+parser = argparse.ArgumentParser(description='Combine basho_bench results into a single directory')
+parser.add_argument('-i', '--input', dest='inputs', nargs='+',
+                   help='list of basho bench result directories')
+
+parser.add_argument('-o', '--output', dest='output',
+                   help='result directory')
+
+args = parser.parse_args()
 
 latency_dict = {}
-for latency_file in glob.glob(results_base_dir + "/*/*latencies.csv"):
-    matchObj = re.match( r'(.*)\/(.*)\/(.*)', latency_file, re.M|re.I)
-    if matchObj:
-        latency_dict[matchObj.group(3)] = []
+
+for directory in args.inputs:
+    for latency_file in glob.glob(directory + "/*latencies.csv"):
+        matchObj = re.match( r'(.*)\/(.*latencies.csv)', latency_file, re.M|re.I)
+        if matchObj:
+            if matchObj.group(2) not in latency_dict:
+                latency_dict[matchObj.group(2)] = []
+            latency_dict[matchObj.group(2)] = build_latencies(latency_dict[matchObj.group(2)], latency_file)
 
 #Write Latencies
 for latency_name in latency_dict:
-    for latency_file in glob.glob(results_base_dir + "/*/" + latency_name):
-        stats_arr = build_latencies(latency_dict[latency_name], latency_file)
-    
-    f = open(latency_name, 'w')
+    f = open(args.output + "/" + latency_name, 'w')
     f.write("elapsed, window, n, min, mean, median, 95th, 99th, 99_9th, max, errors\n")
-    for row in stats_arr:
+    for row in latency_dict[latency_name]:
         f.write(','.join(map(str,row)) + '\n')
     f.close
 
-#Write Summary
-stats_arr = []
-for stat_file in glob.glob(results_base_dir + "/*/summary.csv"):
-    stats_arr = build_summary(stats_arr, stat_file)
+# #Write Summary
+summary_arr = []
+for directory in args.inputs:
+    summary_arr = build_summary(summary_arr, directory + '/summary.csv')
     
-f = open('summary.csv', 'w')
+f = open(args.output + '/summary.csv', 'w')
 f.write("elapsed, window, total, successful, failed\n")
-for row in stats_arr:
+for row in summary_arr:
     f.write(','.join(map(str,row)) + '\n')
 f.close
